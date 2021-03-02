@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import metaCoinArtifact from "../../build/contracts/MetaCoin.json";
+import myFLagArtifact from "../../build/contracts/MyFlag.json";
 
 const App = {
   web3: null,
@@ -12,9 +12,9 @@ const App = {
     try {
       // get contract instance
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = metaCoinArtifact.networks[networkId];
+      const deployedNetwork = myFLagArtifact.networks[networkId];
       this.meta = new web3.eth.Contract(
-        metaCoinArtifact.abi,
+        myFLagArtifact.abi,
         deployedNetwork.address,
       );
 
@@ -22,37 +22,46 @@ const App = {
       const accounts = await web3.eth.getAccounts();
       this.account = accounts[0];
 
-      this.refreshBalance();
+      this.getTopics();
     } catch (error) {
       console.error("Could not connect to contract or chain.");
     }
   },
 
-  refreshBalance: async function() {
-    const { getBalance } = this.meta.methods;
-    const balance = await getBalance(this.account).call();
+  getTopics: async function() {
+    const { getCount } = this.meta.methods;
+    const count = await getCount().call();
 
-    const balanceElement = document.getElementsByClassName("balance")[0];
-    balanceElement.innerHTML = balance;
+    const balanceElement = document.getElementById("count");
+    balanceElement.innerHTML = count;
+
+    const { topics } = this.meta.methods;
+    const topicsElement = document.getElementById("topics");
+    topicsElement.innerHTML = ''
+
+    let i = 0;
+    for(i=0; i<count; i++){
+        const topic = await topics(i).call();
+        const title = topic[0]
+        const content = topic[1]
+        const owner = topic[2]
+        const ts = topic[3]
+        topicsElement.innerHTML += `<li>${title} | ${content} | ${owner} | ${ts}</li>`
+    }
   },
 
-  sendCoin: async function() {
-    const amount = parseInt(document.getElementById("amount").value);
-    const receiver = document.getElementById("receiver").value;
+  postTopic: async function() {
+    const title = document.getElementById("title").value;
+    const content = document.getElementById("content").value;
 
-    this.setStatus("Initiating transaction... (please wait)");
+    if (title == '') {
+      alert('title is empty. ')
+    }
 
-    const { sendCoin } = this.meta.methods;
-    await sendCoin(receiver, amount).send({ from: this.account });
-
-    this.setStatus("Transaction complete!");
-    this.refreshBalance();
-  },
-
-  setStatus: function(message) {
-    const status = document.getElementById("status");
-    status.innerHTML = message;
-  },
+    const { postTopic } = this.meta.methods;
+    await postTopic(title, content).send({ from: this.account });
+    this.getTopics();
+  }
 };
 
 window.App = App;

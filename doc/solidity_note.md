@@ -10,10 +10,8 @@ Mappings是开箱即用, 按照文档的意思是, 都有可能的Key都存在, 
 
 Mapping不能迭代, 需要自己实现。
 
-### memory 关键字
+### memory和storage
 
 ### indexed 关键字
-
-### storage 关键字
 
 ### view 关键字
